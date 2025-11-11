@@ -1,18 +1,17 @@
 CC = gcc
 CFLAGS = -Wall
-OBJ = mainn.o tela_menu.o jogo.o
+LIBS = -lraylib -lGL -lm -lpthread -ldl -lrt -lX11
 
-flybird: $(OBJ)
-	$(CC) $(OBJ) -o flybird
+all: flybird
 
-mainn.o: mainn.c tela_menu.h jogo.h
-	$(CC) $(CFLAGS) -c mainn.c
+flybird: main.o tela_menu.o
+	$(CC) main.o tela_menu.o -o flybird $(LIBS)
+
+main.o: main.c tela_menu.h
+	$(CC) $(CFLAGS) -c main.c
 
 tela_menu.o: tela_menu.c tela_menu.h
 	$(CC) $(CFLAGS) -c tela_menu.c
-
-jogo.o: jogo.c jogo.h
-	$(CC) $(CFLAGS) -c jogo.c
 
 clean:
 	rm -f *.o flybird
