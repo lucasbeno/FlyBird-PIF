@@ -3,56 +3,63 @@
 #include <math.h>
 
 void tela_menu() {
-    const int screenWidth = 800;
-    const int screenHeight = 450;
-
-    InitWindow(screenWidth, screenHeight, "Fly Bird - Menu");
+    // Abre em tela cheia automaticamente
+    InitWindow(0, 0, "Fly Bird - Menu");
+    ToggleFullscreen();
     SetTargetFPS(60);
 
-    // Cores inspiradas no Flappy Bird
+    int screenWidth = GetScreenWidth();
+    int screenHeight = GetScreenHeight();
+
     Color skyBlue = (Color){138, 235, 244, 255};
     Color grassGreen = (Color){117, 201, 109, 255};
-    Color pipeGreen = (Color){77, 194, 71, 255};
 
-    float birdY = screenHeight / 2;
+    float birdY = screenHeight / 2.0f;
     float frame = 0;
 
     while (!WindowShouldClose()) {
         frame += 0.1f;
-        birdY = (screenHeight / 2) + sinf(frame) * 10; // movimento suave
+        birdY = (screenHeight / 2.0f) + sinf(frame) * (screenHeight * 0.015f);
 
-        if (IsKeyPressed(KEY_ENTER)) {
-            break;
-        }
+        if (IsKeyPressed(KEY_ENTER)) break;
 
         BeginDrawing();
         ClearBackground(skyBlue);
 
-        // Fundo verde na parte de baixo (grama)
-        DrawRectangle(0, screenHeight - 50, screenWidth, 50, grassGreen);
+        // Fundo inferior (grama)
+        DrawRectangle(0, screenHeight * 0.9f, screenWidth, screenHeight * 0.1f, grassGreen);
 
-        // Céu (linhas das nuvens)
-        DrawCircle(150, 100, 40, RAYWHITE);
-        DrawCircle(190, 90, 50, RAYWHITE);
-        DrawCircle(230, 100, 40, RAYWHITE);
-        DrawCircle(650, 80, 45, RAYWHITE);
-        DrawCircle(690, 70, 55, RAYWHITE);
-        DrawCircle(730, 80, 45, RAYWHITE);
+        // Nuvens (proporcionais e maiores)
+        DrawCircle(screenWidth * 0.18f, screenHeight * 0.20f, screenWidth * 0.06f, RAYWHITE);
+        DrawCircle(screenWidth * 0.22f, screenHeight * 0.18f, screenWidth * 0.07f, RAYWHITE);
+        DrawCircle(screenWidth * 0.26f, screenHeight * 0.20f, screenWidth * 0.06f, RAYWHITE);
 
-        // Título
-        DrawText("FLY BIRD", 240, 100, 70, YELLOW);
-        DrawText("FLY BIRD", 244, 104, 70, ORANGE); // sombra
+        DrawCircle(screenWidth * 0.72f, screenHeight * 0.15f, screenWidth * 0.06f, RAYWHITE);
+        DrawCircle(screenWidth * 0.76f, screenHeight * 0.13f, screenWidth * 0.07f, RAYWHITE);
+        DrawCircle(screenWidth * 0.80f, screenHeight * 0.15f, screenWidth * 0.06f, RAYWHITE);
 
-        // Pássaro simples (círculo amarelo com bico)
-        DrawCircle(400, birdY, 20, YELLOW);
-        DrawTriangle((Vector2){420, birdY},
-                     (Vector2){435, birdY - 5},
-                     (Vector2){435, birdY + 5},
+        // Título centralizado
+        int fontSize = screenHeight / 6;
+        const char *titulo = "FLY BIRD";
+        int titleWidth = MeasureText(titulo, fontSize);
+        DrawText(titulo, (screenWidth - titleWidth) / 2 + 5, screenHeight * 0.1f + 5, fontSize, ORANGE);
+        DrawText(titulo, (screenWidth - titleWidth) / 2, screenHeight * 0.1f, fontSize, YELLOW);
+
+        // Pássaro
+        float birdX = screenWidth / 2.0f;
+        float birdSize = screenHeight * 0.03f;
+        DrawCircle(birdX, birdY, birdSize, YELLOW);
+        DrawTriangle((Vector2){birdX + birdSize, birdY},
+                     (Vector2){birdX + birdSize * 1.4f, birdY - birdSize / 3},
+                     (Vector2){birdX + birdSize * 1.4f, birdY + birdSize / 3},
                      ORANGE);
-        DrawCircle(392, birdY - 5, 5, BLACK); // olho
+        DrawCircle(birdX - birdSize * 0.5f, birdY - birdSize * 0.3f, birdSize * 0.2f, BLACK);
 
-        // Texto de instrução
-        DrawText("Pressione ENTER para comecar", 220, 330, 25, DARKGREEN);
+        // Texto inferior (ENTER)
+        const char *msg = "Pressione ENTER para comecar";
+        int msgFont = screenHeight / 20;
+        int msgWidth = MeasureText(msg, msgFont);
+        DrawText(msg, (screenWidth - msgWidth) / 2, screenHeight * 0.8f, msgFont, DARKGREEN);
 
         EndDrawing();
     }
