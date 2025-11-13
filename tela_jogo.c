@@ -5,9 +5,14 @@ TelaAtual tela_jogo() {
     int sw = GetScreenWidth();
     int sh = GetScreenHeight();
 
-    float birdX = sw / 2.0f;
+    static float birdX = -1; // valor inicial
     float birdY = sh * 0.35f;
     float birdSize = sh * 0.03f;
+
+    // inicializa só uma vez
+    if (birdX == -1) {
+        birdX = sw * 0.10f;    // pássaro bem à esquerda
+    }
 
     if (IsKeyPressed(KEY_SPACE)) {
         return TELA_SAIR;   // depois vira GAMEPLAY
