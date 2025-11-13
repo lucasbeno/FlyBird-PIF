@@ -11,6 +11,13 @@ typedef struct {
     float velocity;
 } Bird;
 
+typedef struct Pipe {
+    float x;
+    float topHeight;
+    float bottomHeight;
+    struct Pipe *next;
+} Pipe;
+
 // Função da tela de jogo
 TelaAtual tela_jogo();
 
