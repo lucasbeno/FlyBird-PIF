@@ -1,7 +1,7 @@
 #include "raylib.h"
 #include "tela_jogo.h"
-#include <stdlib.h>  // para malloc e free
-#include <stddef.h>  // para NULL
+#include <stdlib.h>
+#include <stddef.h>
 
 #define GRAVITY 800.0f
 #define JUMP_FORCE -300.0f
@@ -12,7 +12,7 @@ Pipe* criarCano(int sw, int sh) {
     float gap = sh * 0.25f;
     float minHeight = sh * 0.10f;
 
-    novo->topHeight = minHeight + GetRandomValue(0, sh * 0.50f);
+    novo->topHeight = minHeight + GetRandomValue(0, (int)(sh * 0.50f));
     novo->bottomHeight = sh - (novo->topHeight + gap);
 
     novo->x = sw + 100;
@@ -48,20 +48,47 @@ void atualizarCanos(Pipe **lista, float delta, float speed) {
     }
 }
 
-void desenharCanos(Pipe *lista, int sh) {
+void desenharCanos(Pipe *lista, int sh, Texture2D canoTexture) {
     Pipe *atual = lista;
 
     while (atual != NULL) {
-        DrawRectangle(atual->x, 0, 80, atual->topHeight, GREEN);
-        DrawRectangle(atual->x, sh - atual->bottomHeight, 80, atual->bottomHeight, GREEN);
+
+        float pipeWidth = 80;
+        float scale = (float)pipeWidth / canoTexture.width;
+
+        float topScaledHeight = atual->topHeight;  
+
+        DrawTexturePro(
+            canoTexture,
+            (Rectangle){0, 0, canoTexture.width, -canoTexture.height}, 
+            (Rectangle){atual->x, 0, pipeWidth, topScaledHeight},
+            (Vector2){0, 0},
+            0.0f,
+            WHITE
+        );
+
+        float bottomScaledHeight = atual->bottomHeight;  
+
+        DrawTexturePro(
+            canoTexture,
+            (Rectangle){0, 0, canoTexture.width, canoTexture.height},
+            (Rectangle){atual->x, sh - bottomScaledHeight, pipeWidth, bottomScaledHeight},
+            (Vector2){0, 0},
+            0.0f,
+            WHITE
+        );
 
         atual = atual->next;
     }
 }
-
 TelaAtual tela_jogo() {
+
     int sw = GetScreenWidth();
     int sh = GetScreenHeight();
+
+    // TEXTURAS (PNG)
+    Texture2D birdTexture = LoadTexture("assets/bird.png");
+    Texture2D canoTexture = LoadTexture("assets/cano.png");
 
     Pipe *canos = NULL;
     float tempoParaNovoCano = 0;
@@ -79,7 +106,6 @@ TelaAtual tela_jogo() {
 
         float delta = GetFrameTime();
 
-        // --- GERAR NOVO CANO ---
         tempoParaNovoCano -= delta;
 
         if (tempoParaNovoCano <= 0) {
@@ -89,18 +115,19 @@ TelaAtual tela_jogo() {
             tempoParaNovoCano = 2.0f;
         }
 
-        // --- ATUALIZAR CANOS ---
         if (jogoComecou) {
             atualizarCanos(&canos, delta, velocidadeCanos);
         }
 
-        // --- FÍSICA DO PÁSSARO ---
         if (!jogoComecou) {
+
             if (IsKeyPressed(KEY_SPACE)) {
                 jogoComecou = true;
                 bird.velocity = JUMP_FORCE;
             }
+
         } else {
+
             bird.velocity += GRAVITY * delta;
             bird.y += bird.velocity * delta;
 
@@ -114,18 +141,22 @@ TelaAtual tela_jogo() {
             }
         }
 
-        // --- DESENHO ---
+
         BeginDrawing();
         ClearBackground((Color){138, 235, 244, 255});
 
-        // chão
         DrawRectangle(0, sh * 0.90f, sw, sh * 0.10f, (Color){117, 201, 109, 255});
 
-        // CANOS — AGORA NO LUGAR CERTO!
-        desenharCanos(canos, sh);
+        desenharCanos(canos, sh, canoTexture);
 
-        // pássaro
-        DrawCircle(bird.x, bird.y, bird.size, YELLOW);
+        DrawTexturePro(
+            birdTexture,
+            (Rectangle){0, 0, birdTexture.width, birdTexture.height},
+            (Rectangle){bird.x - bird.size, bird.y - bird.size, bird.size * 2, bird.size * 2},
+            (Vector2){0,0},
+            0.0f,
+            WHITE
+        );
 
         if (!jogoComecou) {
             const char *msg = "Pressione ESPACO para comecar";
@@ -135,6 +166,9 @@ TelaAtual tela_jogo() {
 
         EndDrawing();
     }
+
+    UnloadTexture(birdTexture);
+    UnloadTexture(canoTexture);
 
     return TELA_SAIR;
 }

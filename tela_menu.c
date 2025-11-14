@@ -7,16 +7,21 @@ TelaAtual tela_menu() {
     int sw = GetScreenWidth();
     int sh = GetScreenHeight();
 
+    static Texture2D birdTexture = {0};
+    if (birdTexture.id == 0) {
+        birdTexture = LoadTexture("assets/bird.png");
+    }
+
     static float frame = 0;
     frame += 0.1f;
 
-    float birdY = (sh / 2.0f) + sinf(frame) * (sh * 0.015f);
+    float birdY = (sh / 2.0f) + sinf(frame) * (sh * 0.02f);
+    float birdSize = sh * 0.06f; 
 
     if (IsKeyPressed(KEY_ENTER)) {
         return TELA_JOGO;
     }
 
-    // ---- DESENHO DA TELA ----
     Color skyBlue = (Color){138, 235, 244, 255};
     Color grassGreen = (Color){117, 201, 109, 255};
 
@@ -28,15 +33,25 @@ TelaAtual tela_menu() {
     int fontSize = sh / 6;
     const char *titulo = "FLY BIRD";
     int titleW = MeasureText(titulo, fontSize);
-    DrawText(titulo, (sw - titleW)/2, sh * 0.1f, fontSize, YELLOW);
 
-    float birdSize = sh * 0.03f;
-    float birdX = sw / 2.0f;
-    DrawCircle(birdX, birdY, birdSize, YELLOW);
+    DrawText(titulo, 
+        (sw - titleW)/2, 
+        sh * 0.10f, 
+        fontSize, 
+        YELLOW
+    );
 
+    float birdX = sw * 0.50f;
     const char *msg = "Pressione ENTER para comecar";
     int msgSize = sh / 20;
-    DrawText(msg, (sw - MeasureText(msg, msgSize))/2, sh * 0.8f, msgSize, DARKGREEN);
+
+    DrawText(
+        msg,
+        (sw - MeasureText(msg, msgSize)) / 2,
+        sh * 0.80f,
+        msgSize,
+        DARKGREEN
+    );
 
     EndDrawing();
 
