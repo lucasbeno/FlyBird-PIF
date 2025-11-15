@@ -2,10 +2,40 @@
 #include "tela_jogo.h"
 #include <stdlib.h>
 #include <stddef.h>
+#include <stdio.h>
 
 #define GRAVITY 800.0f
 #define JUMP_FORCE -300.0f
 
+// -------------------------------------------------------------
+// Draw score using PNG digits
+// -------------------------------------------------------------
+void DrawScore(int score, Texture2D numeros[], int sw) {
+    char text[10];
+    sprintf(text, "%d", score);   // Convert score to string
+
+    int totalWidth = 0;
+
+    // Calculate total width of the number images
+    for (int i = 0; text[i] != '\0'; i++) {
+        int digit = text[i] - '0';
+        totalWidth += numeros[digit].width;
+    }
+
+    int x = (sw - totalWidth) / 2;
+    int y = 40;
+
+    // Draw each digit texture
+    for (int i = 0; text[i] != '\0'; i++) {
+        int digit = text[i] - '0';
+        DrawTexture(numeros[digit], x, y, WHITE);
+        x += numeros[digit].width;
+    }
+}
+
+// -------------------------------------------------------------
+// Create pipe
+// -------------------------------------------------------------
 Pipe* criarCano(int sw, int sh) {
     Pipe *novo = malloc(sizeof(Pipe));
 
@@ -16,11 +46,15 @@ Pipe* criarCano(int sw, int sh) {
     novo->bottomHeight = sh - (novo->topHeight + gap);
 
     novo->x = sw + 100;
+    novo->counted = false;
     novo->next = NULL;
 
     return novo;
 }
 
+// -------------------------------------------------------------
+// Update pipes
+// -------------------------------------------------------------
 void atualizarCanos(Pipe **lista, float delta, float speed) {
     Pipe *atual = *lista;
     Pipe *anterior = NULL;
@@ -48,6 +82,9 @@ void atualizarCanos(Pipe **lista, float delta, float speed) {
     }
 }
 
+// -------------------------------------------------------------
+// Draw pipes
+// -------------------------------------------------------------
 void desenharCanos(Pipe *lista, int sh, Texture2D canoTexture) {
     Pipe *atual = lista;
 
@@ -56,19 +93,21 @@ void desenharCanos(Pipe *lista, int sh, Texture2D canoTexture) {
         float pipeWidth = 80;
         float scale = (float)pipeWidth / canoTexture.width;
 
-        float topScaledHeight = atual->topHeight;  
+        float topScaledHeight = atual->topHeight;
 
+        // Top pipe flipped
         DrawTexturePro(
             canoTexture,
-            (Rectangle){0, 0, canoTexture.width, -canoTexture.height}, 
+            (Rectangle){0, 0, canoTexture.width, -canoTexture.height},
             (Rectangle){atual->x, 0, pipeWidth, topScaledHeight},
             (Vector2){0, 0},
             0.0f,
             WHITE
         );
 
-        float bottomScaledHeight = atual->bottomHeight;  
+        float bottomScaledHeight = atual->bottomHeight;
 
+        // Bottom pipe
         DrawTexturePro(
             canoTexture,
             (Rectangle){0, 0, canoTexture.width, canoTexture.height},
@@ -81,14 +120,26 @@ void desenharCanos(Pipe *lista, int sh, Texture2D canoTexture) {
         atual = atual->next;
     }
 }
+
+// -------------------------------------------------------------
+// Main game screen
+// -------------------------------------------------------------
 TelaAtual tela_jogo() {
 
     int sw = GetScreenWidth();
     int sh = GetScreenHeight();
 
-    // TEXTURAS (PNG)
+    // Textures
     Texture2D birdTexture = LoadTexture("assets/bird.png");
     Texture2D canoTexture = LoadTexture("assets/cano.png");
+
+    // Load digit textures
+    Texture2D numeros[10];
+    for (int i = 0; i < 10; i++) {
+        char caminho[50];
+        sprintf(caminho, "assets/%d.png", i);
+        numeros[i] = LoadTexture(caminho);
+    }
 
     Pipe *canos = NULL;
     float tempoParaNovoCano = 0;
@@ -100,6 +151,7 @@ TelaAtual tela_jogo() {
     bird.size = sh * 0.03f;
     bird.velocity = 0;
 
+    int score = 0;
     bool jogoComecou = false;
 
     while (!WindowShouldClose()) {
@@ -108,6 +160,7 @@ TelaAtual tela_jogo() {
 
         tempoParaNovoCano -= delta;
 
+        // Create new pipes
         if (tempoParaNovoCano <= 0) {
             Pipe *novo = criarCano(sw, sh);
             novo->next = canos;
@@ -119,6 +172,7 @@ TelaAtual tela_jogo() {
             atualizarCanos(&canos, delta, velocidadeCanos);
         }
 
+        // Before the game starts
         if (!jogoComecou) {
 
             if (IsKeyPressed(KEY_SPACE)) {
@@ -128,20 +182,33 @@ TelaAtual tela_jogo() {
 
         } else {
 
+            // Gravity
             bird.velocity += GRAVITY * delta;
             bird.y += bird.velocity * delta;
 
+            // Jump
             if (IsKeyPressed(KEY_SPACE)) {
                 bird.velocity = JUMP_FORCE;
             }
 
+            // Ground collision
             if (bird.y + bird.size > sh * 0.90f) {
                 bird.y = sh * 0.90f - bird.size;
                 bird.velocity = 0;
             }
+
+            // -------- Score update --------
+            Pipe *p = canos;
+            while (p != NULL) {
+                if (!p->counted && p->x + 80 < bird.x) {  // passed pipe
+                    p->counted = true;
+                    score++;
+                }
+                p = p->next;
+            }
         }
 
-
+        // ---------------------- DRAW ----------------------
         BeginDrawing();
         ClearBackground((Color){138, 235, 244, 255});
 
@@ -158,8 +225,10 @@ TelaAtual tela_jogo() {
             WHITE
         );
 
+        DrawScore(score, numeros, sw);
+
         if (!jogoComecou) {
-            const char *msg = "Pressione ESPACO para comecar";
+            const char *msg = "Press SPACE to start";
             int msgSize = sh / 20;
             DrawText(msg, (sw - MeasureText(msg, msgSize)) / 2, sh * 0.75f, msgSize, DARKGREEN);
         }
@@ -169,6 +238,10 @@ TelaAtual tela_jogo() {
 
     UnloadTexture(birdTexture);
     UnloadTexture(canoTexture);
+
+    for (int i = 0; i < 10; i++) {
+        UnloadTexture(numeros[i]);
+    }
 
     return TELA_SAIR;
 }

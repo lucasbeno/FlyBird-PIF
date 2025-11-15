@@ -15,6 +15,7 @@ typedef struct Pipe {
     float x;
     float topHeight;
     float bottomHeight;
+    bool counted;
     struct Pipe *next;
 } Pipe;
 
