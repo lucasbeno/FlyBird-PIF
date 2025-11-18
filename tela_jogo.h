@@ -1,16 +1,9 @@
 #ifndef TELA_JOGO_H
 #define TELA_JOGO_H
 
-#include "tela_menu.h"   // usa o enum TELA_MENU, TELA_JOGO, TELA_SAIR
+#include "tela_menu.h"
 
-// Struct do pássaro (Bird)
-typedef struct {
-    float x;
-    float y;
-    float size;
-    float velocity;
-} Bird;
-
+// estruturas usadas
 typedef struct Pipe {
     float x;
     float topHeight;
@@ -19,8 +12,12 @@ typedef struct Pipe {
     struct Pipe *next;
 } Pipe;
 
-// Função da tela de jogo
+typedef struct {
+    float x, y;
+    float velocity;
+    float size;
+} Bird;
+
 TelaAtual tela_jogo();
 
 #endif
-

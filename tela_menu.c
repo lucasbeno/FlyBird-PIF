@@ -16,8 +16,11 @@ TelaAtual tela_menu() {
     frame += 0.1f;
 
     float birdY = (sh / 2.0f) + sinf(frame) * (sh * 0.02f);
-    float birdSize = sh * 0.06f; 
+    float birdSize = sh * 0.06f;
 
+    float birdX = sw * 0.50f;
+
+    // ENTRAR NO JOGO
     if (IsKeyPressed(KEY_ENTER)) {
         return TELA_JOGO;
     }
@@ -28,20 +31,38 @@ TelaAtual tela_menu() {
     BeginDrawing();
     ClearBackground(skyBlue);
 
+    // chão
     DrawRectangle(0, sh * 0.9f, sw, sh * 0.1f, grassGreen);
 
+    // título
     int fontSize = sh / 6;
     const char *titulo = "FLY BIRD";
     int titleW = MeasureText(titulo, fontSize);
 
-    DrawText(titulo, 
-        (sw - titleW)/2, 
-        sh * 0.10f, 
-        fontSize, 
+    DrawText(
+        titulo,
+        (sw - titleW) / 2,
+        sh * 0.10f,
+        fontSize,
         YELLOW
     );
 
-    float birdX = sw * 0.50f;
+    // DESENHAR O PÁSSARO (aqui estava faltando!)
+    DrawTexturePro(
+        birdTexture,
+        (Rectangle){0, 0, birdTexture.width, birdTexture.height},
+        (Rectangle){
+            birdX - birdSize,
+            birdY - birdSize,
+            birdSize * 2,
+            birdSize * 2
+        },
+        (Vector2){0,0},
+        0.0f,
+        WHITE
+    );
+
+    // mensagem inferior
     const char *msg = "Pressione ENTER para comecar";
     int msgSize = sh / 20;
 

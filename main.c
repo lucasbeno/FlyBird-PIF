@@ -19,10 +19,6 @@ int main() {
             case TELA_JOGO:
                 estado = tela_jogo();
                 break;
-
-            case TELA_SAIR:
-                CloseWindow();
-                return 0;
         }
     }
 

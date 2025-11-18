@@ -3,26 +3,18 @@
 
 TelaAtual tela_game_over() {
 
-    while (!WindowShouldClose()) {
+    BeginDrawing();
+    ClearBackground(BLACK);
 
-        BeginDrawing();
-        ClearBackground(BLACK);
+    DrawText("GAME OVER", 200, 150, 50, RED);
+    DrawText("Pressione ENTER para reiniciar", 120, 250, 24, WHITE);
 
-        DrawText("GAME OVER", 200, 150, 50, RED);
-        DrawText("Pressione ENTER para reiniciar", 120, 250, 24, WHITE);
+    EndDrawing();
 
-        EndDrawing();
-
-        // ENTER → volta pro jogo
-        if (IsKeyPressed(KEY_ENTER)) {
-            return TELA_JOGO;
-        }
-
-        // ESC → volta pro menu
-        if (IsKeyPressed(KEY_ESCAPE)) {
-            return TELA_MENU;
-        }
+    if (IsKeyPressed(KEY_ENTER)) {
+        return TELA_JOGO;  // volta para o jogo
     }
 
-    return TELA_MENU; // fallback
+    return TELA_GAME_OVER;
 }
+

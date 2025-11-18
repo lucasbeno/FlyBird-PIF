@@ -6,14 +6,14 @@
 
 #define GRAVITY 800.0f
 #define JUMP_FORCE -300.0f
-#define GROUND_HEIGHT 0.10f  // porcentagem da tela
+#define GROUND_HEIGHT 0.10f     // porcentagem da tela
 
-// -------------------------------------------------------------
-// Draw score using PNG digits
-// -------------------------------------------------------------
+// =====================================================================
+// DESENHA OS NÚMEROS DO SCORE (PNG's)
+// =====================================================================
 void DrawScore(int score, Texture2D numeros[], int sw) {
     char text[10];
-    sprintf(text, "%d", score);   // Convert score to string
+    sprintf(text, "%d", score);
 
     int totalWidth = 0;
 
@@ -32,9 +32,9 @@ void DrawScore(int score, Texture2D numeros[], int sw) {
     }
 }
 
-// -------------------------------------------------------------
-// Create a new pipe
-// -------------------------------------------------------------
+// =====================================================================
+// CRIA UM NOVO CANO
+// =====================================================================
 Pipe* criarCano(int sw, int sh) {
     Pipe *novo = malloc(sizeof(Pipe));
     if (!novo) return NULL;
@@ -52,17 +52,17 @@ Pipe* criarCano(int sw, int sh) {
     return novo;
 }
 
-// -------------------------------------------------------------
-// Update pipe positions
-// -------------------------------------------------------------
-void atualizarCanos(Pipe **lista, float delta, float speed) {
+// =====================================================================
+// ATUALIZA CANOS  (AGORA RECEBE A VELOCIDADE POR PONTEIRO)
+// =====================================================================
+void atualizarCanos(Pipe **lista, float delta, float *speed) {
     Pipe *atual = *lista;
     Pipe *anterior = NULL;
 
     while (atual != NULL) {
-        atual->x -= speed * delta;
+        atual->x -= (*speed) * delta;
 
-        if (atual->x < -100) {  // remove pipe que saiu da tela
+        if (atual->x < -100) {
             Pipe *remover = atual;
             if (anterior == NULL) *lista = atual->next;
             else anterior->next = atual->next;
@@ -76,30 +76,26 @@ void atualizarCanos(Pipe **lista, float delta, float speed) {
     }
 }
 
-// -------------------------------------------------------------
-// Draw pipes
-// -------------------------------------------------------------
+// =====================================================================
+// DESENHA CANOS
+// =====================================================================
 void desenharCanos(Pipe *lista, int sh, Texture2D canoTexture) {
     Pipe *atual = lista;
 
     while (atual != NULL) {
         float pipeWidth = 80;
-        float topHeight = atual->topHeight;
-        float bottomHeight = atual->bottomHeight;
 
-        // Top pipe flipped
         DrawTexturePro(
             canoTexture,
             (Rectangle){0, 0, canoTexture.width, -canoTexture.height},
-            (Rectangle){atual->x, 0, pipeWidth, topHeight},
+            (Rectangle){atual->x, 0, pipeWidth, atual->topHeight},
             (Vector2){0,0}, 0.0f, WHITE
         );
 
-        // Bottom pipe
         DrawTexturePro(
             canoTexture,
             (Rectangle){0,0,canoTexture.width,canoTexture.height},
-            (Rectangle){atual->x, sh - bottomHeight, pipeWidth, bottomHeight},
+            (Rectangle){atual->x, sh - atual->bottomHeight, pipeWidth, atual->bottomHeight},
             (Vector2){0,0}, 0.0f, WHITE
         );
 
@@ -107,15 +103,15 @@ void desenharCanos(Pipe *lista, int sh, Texture2D canoTexture) {
     }
 }
 
-// -------------------------------------------------------------
-// Main game loop
-// -------------------------------------------------------------
+// =====================================================================
+// TELA DO JOGO COMPLETA + GAME OVER
+// =====================================================================
 TelaAtual tela_jogo() {
 
     int sw = GetScreenWidth();
     int sh = GetScreenHeight();
 
-    // --------------------- Textures ---------------------
+    // Textures
     Texture2D birdTexture = LoadTexture("assets/bird.png");
     Texture2D canoTexture = LoadTexture("assets/cano.png");
 
@@ -126,10 +122,10 @@ TelaAtual tela_jogo() {
         numeros[i] = LoadTexture(caminho);
     }
 
-    // --------------------- Variables ---------------------
+    // Variáveis
     Pipe *canos = NULL;
     float tempoParaNovoCano = 0;
-    float velocidadeCanos = 300.0f;
+    float velocidadeCanos = 300.0f;   // <--- ***VELOCIDADE ATUALIZÁVEL***
 
     Bird bird;
     bird.x = sw * 0.12f;
@@ -139,25 +135,58 @@ TelaAtual tela_jogo() {
 
     int score = 0;
     bool jogoComecou = false;
+    bool gameOver = false;
 
-    // --------------------- Game Loop ---------------------
+    // ========================== GAME LOOP =============================
     while (!WindowShouldClose()) {
         float delta = GetFrameTime();
-        tempoParaNovoCano -= delta;
 
-        // Create new pipe
+        // ---------------- GAME OVER PARTE LÓGICA ----------------
+        if (gameOver) {
+
+            if (IsKeyPressed(KEY_ENTER)) return TELA_MENU;
+            if (IsKeyPressed(KEY_ESCAPE)) return TELA_MENU;
+
+            BeginDrawing();
+            ClearBackground((Color){138, 235, 244, 255});
+
+            DrawRectangle(0, sh * (1.0f - GROUND_HEIGHT), sw, sh * GROUND_HEIGHT,
+                          (Color){117,201,109,255});
+
+            desenharCanos(canos, sh, canoTexture);
+
+            DrawTexturePro(
+                birdTexture,
+                (Rectangle){0,0,birdTexture.width,birdTexture.height},
+                (Rectangle){bird.x-bird.size,bird.y-bird.size,bird.size*2,bird.size*2},
+                (Vector2){0,0},
+                90.0f,
+                WHITE
+            );
+
+            DrawScore(score, numeros, sw);
+
+            int fs = sh / 12;
+            DrawText("GAME OVER", (sw - MeasureText("GAME OVER", fs))/2, sh*0.35f, fs, RED);
+
+            int fs2 = sh / 25;
+            DrawText("Press ENTER to return",
+                     (sw - MeasureText("Press ENTER to return", fs2)) / 2,
+                     sh * 0.55f, fs2, BLACK);
+
+            EndDrawing();
+            continue;
+        }
+
+        // ---------------- SPAWN CANO ----------------
+        tempoParaNovoCano -= delta;
         if (tempoParaNovoCano <= 0) {
             Pipe *novo = criarCano(sw, sh);
             if (novo) { novo->next = canos; canos = novo; }
             tempoParaNovoCano = 2.0f;
         }
 
-        // Update pipes
-        if (jogoComecou) {
-            atualizarCanos(&canos, delta, velocidadeCanos);
-        }
-
-        // --------------------- Bird Physics ---------------------
+        // ---------------- FÍSICA DO PÁSSARO ----------------
         if (!jogoComecou) {
             if (IsKeyPressed(KEY_SPACE)) {
                 jogoComecou = true;
@@ -170,56 +199,44 @@ TelaAtual tela_jogo() {
             if (IsKeyPressed(KEY_SPACE)) {
                 bird.velocity = JUMP_FORCE;
             }
+
+            // *** CORRIGIDO: AGORA PASSA A VELOCIDADE POR REFERÊNCIA ***
+            atualizarCanos(&canos, delta, &velocidadeCanos);
         }
 
-        // --------------------- Collision ---------------------
+        // ---------------- COLLISIONS ----------------
         Rectangle birdRec = { bird.x - bird.size, bird.y - bird.size, bird.size*2, bird.size*2 };
 
-        // Ground collision -> game over
         if (bird.y + bird.size > sh * (1.0f - GROUND_HEIGHT)) {
-            // Free pipes
-            Pipe *tmp = canos;
-            while (tmp) { Pipe *n = tmp->next; free(tmp); tmp = n; }
-
-            UnloadTexture(birdTexture);
-            UnloadTexture(canoTexture);
-            for (int i = 0; i < 10; i++) UnloadTexture(numeros[i]);
-
-            return TELA_MENU;
+            gameOver = true;
         }
 
-        // Pipes collision -> game over
-        Pipe *p = canos;
-        while (p != NULL) {
+        for (Pipe *p = canos; p != NULL; p = p->next) {
+
             Rectangle topPipe = { p->x, 0, 80, p->topHeight };
             Rectangle bottomPipe = { p->x, sh - p->bottomHeight, 80, p->bottomHeight };
 
             if (CheckCollisionRecs(birdRec, topPipe) || CheckCollisionRecs(birdRec, bottomPipe)) {
-                Pipe *tmp = canos;
-                while (tmp) { Pipe *n = tmp->next; free(tmp); tmp = n; }
-
-                UnloadTexture(birdTexture);
-                UnloadTexture(canoTexture);
-                for (int i = 0; i < 10; i++) UnloadTexture(numeros[i]);
-
-                return TELA_MENU;
+                gameOver = true;
             }
 
-            // Score
+            // score + aumenta velocidade
             if (!p->counted && p->x + 80 < bird.x) {
                 p->counted = true;
                 score++;
-            }
 
-            p = p->next;
+                velocidadeCanos += 100.0f;
+
+                printf("Score = %d | Velocidade = %.2f\n", score, velocidadeCanos);
+            }
         }
 
-        // --------------------- Draw ---------------------
+        // ---------------- DESENHO ----------------
         BeginDrawing();
         ClearBackground((Color){138, 235, 244, 255});
 
-        // Ground
-        DrawRectangle(0, sh * (1.0f - GROUND_HEIGHT), sw, sh * GROUND_HEIGHT, (Color){117,201,109,255});
+        DrawRectangle(0, sh * (1.0f - GROUND_HEIGHT), sw, sh * GROUND_HEIGHT,
+                      (Color){117,201,109,255});
 
         desenharCanos(canos, sh, canoTexture);
 
@@ -236,20 +253,12 @@ TelaAtual tela_jogo() {
 
         if (!jogoComecou) {
             const char *msg = "Press SPACE to start";
-            int msgSize = sh / 20;
-            DrawText(msg, (sw - MeasureText(msg, msgSize))/2, sh * 0.75f, msgSize, DARKGREEN);
+            int s = sh / 20;
+            DrawText(msg, (sw - MeasureText(msg, s))/2, sh * 0.75f, s, DARKGREEN);
         }
 
         EndDrawing();
     }
 
-    // --------------------- Cleanup ---------------------
-    Pipe *tmp = canos;
-    while (tmp) { Pipe *n = tmp->next; free(tmp); tmp = n; }
-
-    UnloadTexture(birdTexture);
-    UnloadTexture(canoTexture);
-    for (int i = 0; i < 10; i++) UnloadTexture(numeros[i]);
-
-    return TELA_SAIR;
+    return TELA_MENU;
 }

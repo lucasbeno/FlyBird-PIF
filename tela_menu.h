@@ -4,7 +4,7 @@
 typedef enum {
     TELA_MENU,
     TELA_JOGO,
-    TELA_SAIR
+    TELA_GAME_OVER
 } TelaAtual;
 
 TelaAtual tela_menu();
