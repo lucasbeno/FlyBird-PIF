@@ -12,7 +12,7 @@ TelaAtual tela_game_over() {
     EndDrawing();
 
     if (IsKeyPressed(KEY_ENTER)) {
-        return TELA_JOGO;  // volta para o jogo
+        return TELA_JOGO;
     }
 
     return TELA_GAME_OVER;

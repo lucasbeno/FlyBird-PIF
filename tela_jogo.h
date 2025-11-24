@@ -3,7 +3,6 @@
 
 #include "tela_menu.h"
 
-// estruturas usadas
 typedef struct Pipe {
     float x;
     float topHeight;

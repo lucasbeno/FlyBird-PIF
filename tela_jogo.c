@@ -6,11 +6,8 @@
 
 #define GRAVITY 800.0f
 #define JUMP_FORCE -300.0f
-#define GROUND_HEIGHT 0.10f     // porcentagem da tela
+#define GROUND_HEIGHT 0.10f 
 
-// =====================================================================
-// DESENHA OS NÚMEROS DO SCORE (PNG's)
-// =====================================================================
 void DrawScore(int score, Texture2D numeros[], int sw) {
     char text[10];
     sprintf(text, "%d", score);
@@ -32,9 +29,6 @@ void DrawScore(int score, Texture2D numeros[], int sw) {
     }
 }
 
-// =====================================================================
-// CRIA UM NOVO CANO
-// =====================================================================
 Pipe* criarCano(int sw, int sh) {
     Pipe *novo = malloc(sizeof(Pipe));
     if (!novo) return NULL;
@@ -52,9 +46,6 @@ Pipe* criarCano(int sw, int sh) {
     return novo;
 }
 
-// =====================================================================
-// ATUALIZA CANOS  (AGORA RECEBE A VELOCIDADE POR PONTEIRO)
-// =====================================================================
 void atualizarCanos(Pipe **lista, float delta, float *speed) {
     Pipe *atual = *lista;
     Pipe *anterior = NULL;
@@ -76,9 +67,6 @@ void atualizarCanos(Pipe **lista, float delta, float *speed) {
     }
 }
 
-// =====================================================================
-// DESENHA CANOS
-// =====================================================================
 void desenharCanos(Pipe *lista, int sh, Texture2D canoTexture) {
     Pipe *atual = lista;
 
@@ -103,15 +91,11 @@ void desenharCanos(Pipe *lista, int sh, Texture2D canoTexture) {
     }
 }
 
-// =====================================================================
-// TELA DO JOGO COMPLETA + GAME OVER
-// =====================================================================
 TelaAtual tela_jogo() {
 
     int sw = GetScreenWidth();
     int sh = GetScreenHeight();
 
-    // Textures
     Texture2D birdTexture = LoadTexture("assets/bird.png");
     Texture2D canoTexture = LoadTexture("assets/cano.png");
 
@@ -122,10 +106,9 @@ TelaAtual tela_jogo() {
         numeros[i] = LoadTexture(caminho);
     }
 
-    // Variáveis
     Pipe *canos = NULL;
     float tempoParaNovoCano = 0;
-    float velocidadeCanos = 300.0f;   // <--- ***VELOCIDADE ATUALIZÁVEL***
+    float velocidadeCanos = 300.0f;   
 
     Bird bird;
     bird.x = sw * 0.12f;
@@ -137,11 +120,9 @@ TelaAtual tela_jogo() {
     bool jogoComecou = false;
     bool gameOver = false;
 
-    // ========================== GAME LOOP =============================
     while (!WindowShouldClose()) {
         float delta = GetFrameTime();
 
-        // ---------------- GAME OVER PARTE LÓGICA ----------------
         if (gameOver) {
 
             if (IsKeyPressed(KEY_ENTER)) return TELA_MENU;
@@ -178,7 +159,6 @@ TelaAtual tela_jogo() {
             continue;
         }
 
-        // ---------------- SPAWN CANO ----------------
         tempoParaNovoCano -= delta;
         if (tempoParaNovoCano <= 0) {
             Pipe *novo = criarCano(sw, sh);
@@ -186,7 +166,6 @@ TelaAtual tela_jogo() {
             tempoParaNovoCano = 2.0f;
         }
 
-        // ---------------- FÍSICA DO PÁSSARO ----------------
         if (!jogoComecou) {
             if (IsKeyPressed(KEY_SPACE)) {
                 jogoComecou = true;
@@ -200,11 +179,9 @@ TelaAtual tela_jogo() {
                 bird.velocity = JUMP_FORCE;
             }
 
-            // *** CORRIGIDO: AGORA PASSA A VELOCIDADE POR REFERÊNCIA ***
             atualizarCanos(&canos, delta, &velocidadeCanos);
         }
 
-        // ---------------- COLLISIONS ----------------
         Rectangle birdRec = { bird.x - bird.size, bird.y - bird.size, bird.size*2, bird.size*2 };
 
         if (bird.y + bird.size > sh * (1.0f - GROUND_HEIGHT)) {
@@ -220,7 +197,6 @@ TelaAtual tela_jogo() {
                 gameOver = true;
             }
 
-            // score + aumenta velocidade
             if (!p->counted && p->x + 80 < bird.x) {
                 p->counted = true;
                 score++;
@@ -231,7 +207,6 @@ TelaAtual tela_jogo() {
             }
         }
 
-        // ---------------- DESENHO ----------------
         BeginDrawing();
         ClearBackground((Color){138, 235, 244, 255});
 
