@@ -21,10 +21,14 @@ O projeto foi criado como prática de programação estruturada, manipulação d
 - Canos aleatórios que se movimentam da direita para a esquerda
 - Colisão e sistema de pontuação
 - Telas de **menu**, **jogo** e **game over**
-- Reinício rápido (tecla `R`)
 - Encerramento do jogo (tecla `Esc`)
 
 ---
 
+## 🎥 Demonstração do Jogo
+
+[![Assista ao vídeo no YouTube](https://img.youtube.com/vi/Cb2vl6m-DLQ/hqdefault.jpg)](https://youtu.be/Cb2vl6m-DLQ)
+
 ## ⚙️ Tecnologias utilizadas
 - **Linguagem:** C  
+
