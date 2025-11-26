@@ -32,3 +32,17 @@ O projeto foi criado como prática de programação estruturada, manipulação d
 ## ⚙️ Tecnologias utilizadas
 - **Linguagem:** C  
 
+## Instruções de Compilação e Uso
+1. Clonar o repositório
+git clone https://github.com/lucasbeno/FlyBird-PIF
+cd FlyBird-PIF
+
+2. Instalar dependências (Ubuntu/WSL2)
+sudo apt update
+sudo apt install build-essential make libraylib-dev
+
+🛠️ 3. Compilar o projeto
+make
+
+4. Executar o jogo
+./flybird
