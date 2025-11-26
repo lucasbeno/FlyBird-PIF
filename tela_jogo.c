@@ -4,6 +4,26 @@
 #include <stdio.h>
 #include <stdbool.h>
 
+#define ARQUIVO_RECORD "highscore.txt"
+
+int carregarRecorde() {
+    FILE *arquivo = fopen(ARQUIVO_RECORD, "r");
+    int recorde = 0;
+    if (arquivo != NULL) {
+        fscanf(arquivo, "%d", &recorde);
+        fclose(arquivo);
+    }
+    return recorde;
+}
+
+void salvarRecorde(int novoRecorde) {
+    FILE *arquivo = fopen(ARQUIVO_RECORD, "w");
+    if (arquivo != NULL) {
+        fprintf(arquivo, "%d", novoRecorde);
+        fclose(arquivo);
+    }
+}
+
 #define GRAVIDADE 800.0f
 #define FORCA_PULO -300.0f
 #define ALTURA_CHÃO 0.10f 
@@ -117,6 +137,7 @@ TelaAtual tela_jogo() {
     passaro.velocidade = 0;
 
     int pontuacao = 0;
+    int highscore = carregarRecorde();
     bool jogoComecou = false;
     bool jogoTerminou = false;
 
@@ -150,6 +171,15 @@ TelaAtual tela_jogo() {
 
             int fs = altura_tela / 12;
             DrawText("GAME OVER", (largura_tela - MeasureText("GAME OVER", fs))/2, altura_tela*0.35f, fs, RED);
+
+
+            char textoRecorde[30];
+            sprintf(textoRecorde, "High Score: %d", highscore);
+            int fsRecorde = altura_tela / 20;
+            DrawText(textoRecorde, 
+                    (largura_tela - MeasureText(textoRecorde, fsRecorde))/2, 
+                    altura_tela * 0.45f, 
+                    fsRecorde, ORANGE);
 
             int fs2 = altura_tela / 25;
             DrawText("Press ENTER to return",
@@ -192,6 +222,10 @@ TelaAtual tela_jogo() {
 
         if (passaro.posicao_passaro_y + passaro.tamanho > altura_tela * (1.0f - ALTURA_CHÃO)) {
             jogoTerminou = true;
+            if (pontuacao > highscore) {
+                highscore = pontuacao;
+                salvarRecorde(highscore);
+            }
         }
 
         for (Cano *c = listaCanos; c != NULL; c = c->next) {
@@ -202,6 +236,10 @@ TelaAtual tela_jogo() {
             if (CheckCollisionRecs(retanguloPassaro, canoSuperior) ||
                 CheckCollisionRecs(retanguloPassaro, canoInferior)) {
                 jogoTerminou = true;
+                if (pontuacao > highscore) {
+                highscore = pontuacao;
+                salvarRecorde(highscore);
+            }
             }
 
             if (!c->contado && c->posicao_cano_x + 80 < passaro.posicao_passaro_x) {
