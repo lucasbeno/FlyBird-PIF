@@ -4,57 +4,57 @@
 #include <stdio.h>
 #include <stdbool.h>
 
-#define GRAVITY 800.0f
-#define JUMP_FORCE -300.0f
-#define GROUND_HEIGHT 0.10f 
+#define GRAVIDADE 800.0f
+#define FORCA_PULO -300.0f
+#define ALTURA_CHÃO 0.10f 
 
-void DrawScore(int score, Texture2D numeros[], int sw) {
-    char text[10];
-    sprintf(text, "%d", score);
+void DesenharPontuacao(int pontuacao, Texture2D numeros[], int largura_tela) {
+    char texto[10];
+    sprintf(texto, "%d", pontuacao);
 
-    int totalWidth = 0;
+    int larguraTotal = 0;
 
-    for (int i = 0; text[i] != '\0'; i++) {
-        int digit = text[i] - '0';
-        totalWidth += numeros[digit].width;
+    for (int i = 0; texto[i] != '\0'; i++) {
+        int digito = texto[i] - '0';
+        larguraTotal += numeros[digito].width;
     }
 
-    int x = (sw - totalWidth) / 2;
-    int y = 40;
+    int pos_x = (largura_tela - larguraTotal) / 2;
+    int pos_y = 40;
 
-    for (int i = 0; text[i] != '\0'; i++) {
-        int digit = text[i] - '0';
-        DrawTexture(numeros[digit], x, y, WHITE);
-        x += numeros[digit].width;
+    for (int i = 0; texto[i] != '\0'; i++) {
+        int digito = texto[i] - '0';
+        DrawTexture(numeros[digito], pos_x, pos_y, WHITE);
+        pos_x += numeros[digito].width;
     }
 }
 
-Pipe* criarCano(int sw, int sh) {
-    Pipe *novo = malloc(sizeof(Pipe));
+Cano* criarCano(int largura_tela, int altura_tela) {
+    Cano *novo = malloc(sizeof(Cano));
     if (!novo) return NULL;
 
-    float gap = sh * 0.25f;
-    float minHeight = sh * 0.10f;
+    float espaco = altura_tela * 0.25f;
+    float alturaMinima = altura_tela * 0.10f;
 
-    novo->topHeight = minHeight + GetRandomValue(0, (int)(sh * 0.50f));
-    novo->bottomHeight = sh - (novo->topHeight + gap);
+    novo->altura_cano_superior = alturaMinima + GetRandomValue(0, (int)(altura_tela * 0.50f));
+    novo->altura_cano_inferior = altura_tela - (novo->altura_cano_superior + espaco);
 
-    novo->x = sw + 100;
-    novo->counted = false;
+    novo->posicao_cano_x = largura_tela + 100;
+    novo->contado = false;
     novo->next = NULL;
 
     return novo;
 }
 
-void atualizarCanos(Pipe **lista, float delta, float *speed) {
-    Pipe *atual = *lista;
-    Pipe *anterior = NULL;
+void atualizarCanos(Cano **lista, float delta, float *velocidade) {
+    Cano *atual = *lista;
+    Cano *anterior = NULL;
 
     while (atual != NULL) {
-        atual->x -= (*speed) * delta;
+        atual->posicao_cano_x -= (*velocidade) * delta;
 
-        if (atual->x < -100) {
-            Pipe *remover = atual;
+        if (atual->posicao_cano_x < -100) {
+            Cano *remover = atual;
             if (anterior == NULL) *lista = atual->next;
             else anterior->next = atual->next;
             atual = atual->next;
@@ -67,23 +67,23 @@ void atualizarCanos(Pipe **lista, float delta, float *speed) {
     }
 }
 
-void desenharCanos(Pipe *lista, int sh, Texture2D canoTexture) {
-    Pipe *atual = lista;
+void desenharCanos(Cano *lista, int altura_tela, Texture2D texturaCano) {
+    Cano *atual = lista;
 
     while (atual != NULL) {
-        float pipeWidth = 80;
+        float larguraCano = 80;
 
         DrawTexturePro(
-            canoTexture,
-            (Rectangle){0, 0, canoTexture.width, -canoTexture.height},
-            (Rectangle){atual->x, 0, pipeWidth, atual->topHeight},
+            texturaCano,
+            (Rectangle){0, 0, texturaCano.width, -texturaCano.height},
+            (Rectangle){atual->posicao_cano_x, 0, larguraCano, atual->altura_cano_superior},
             (Vector2){0,0}, 0.0f, WHITE
         );
 
         DrawTexturePro(
-            canoTexture,
-            (Rectangle){0,0,canoTexture.width,canoTexture.height},
-            (Rectangle){atual->x, sh - atual->bottomHeight, pipeWidth, atual->bottomHeight},
+            texturaCano,
+            (Rectangle){0,0,texturaCano.width,texturaCano.height},
+            (Rectangle){atual->posicao_cano_x, altura_tela - atual->altura_cano_inferior, larguraCano, atual->altura_cano_inferior},
             (Vector2){0,0}, 0.0f, WHITE
         );
 
@@ -93,11 +93,11 @@ void desenharCanos(Pipe *lista, int sh, Texture2D canoTexture) {
 
 TelaAtual tela_jogo() {
 
-    int sw = GetScreenWidth();
-    int sh = GetScreenHeight();
+    int largura_tela = GetScreenWidth();
+    int altura_tela = GetScreenHeight();
 
-    Texture2D birdTexture = LoadTexture("assets/bird.png");
-    Texture2D canoTexture = LoadTexture("assets/cano.png");
+    Texture2D texturaPassaro = LoadTexture("assets/bird.png");
+    Texture2D texturaCano = LoadTexture("assets/cano.png");
 
     Texture2D numeros[10];
     for (int i = 0; i < 10; i++) {
@@ -106,24 +106,24 @@ TelaAtual tela_jogo() {
         numeros[i] = LoadTexture(caminho);
     }
 
-    Pipe *canos = NULL;
-    float tempoParaNovoCano = 0;
+    Cano *listaCanos = NULL;
+    float tempoNovoCano = 0;
     float velocidadeCanos = 300.0f;   
 
-    Bird bird;
-    bird.x = sw * 0.12f;
-    bird.y = sh * 0.35f;
-    bird.size = sh * 0.03f;
-    bird.velocity = 0;
+    Passaro passaro;
+    passaro.posicao_passaro_x = largura_tela * 0.12f;
+    passaro.posicao_passaro_y = altura_tela * 0.35f;
+    passaro.tamanho = altura_tela * 0.03f;
+    passaro.velocidade = 0;
 
-    int score = 0;
+    int pontuacao = 0;
     bool jogoComecou = false;
-    bool gameOver = false;
+    bool jogoTerminou = false;
 
     while (!WindowShouldClose()) {
         float delta = GetFrameTime();
 
-        if (gameOver) {
+        if (jogoTerminou) {
 
             if (IsKeyPressed(KEY_ENTER)) return TELA_MENU;
             if (IsKeyPressed(KEY_ESCAPE)) return TELA_MENU;
@@ -131,105 +131,113 @@ TelaAtual tela_jogo() {
             BeginDrawing();
             ClearBackground((Color){138, 235, 244, 255});
 
-            DrawRectangle(0, sh * (1.0f - GROUND_HEIGHT), sw, sh * GROUND_HEIGHT,
+            DrawRectangle(0, altura_tela * (1.0f - ALTURA_CHÃO), largura_tela, altura_tela * ALTURA_CHÃO,
                           (Color){117,201,109,255});
 
-            desenharCanos(canos, sh, canoTexture);
+            desenharCanos(listaCanos, altura_tela, texturaCano);
 
             DrawTexturePro(
-                birdTexture,
-                (Rectangle){0,0,birdTexture.width,birdTexture.height},
-                (Rectangle){bird.x-bird.size,bird.y-bird.size,bird.size*2,bird.size*2},
+                texturaPassaro,
+                (Rectangle){0,0,texturaPassaro.width,texturaPassaro.height},
+                (Rectangle){passaro.posicao_passaro_x-passaro.tamanho, passaro.posicao_passaro_y-passaro.tamanho,
+                            passaro.tamanho*2, passaro.tamanho*2},
                 (Vector2){0,0},
                 90.0f,
                 WHITE
             );
 
-            DrawScore(score, numeros, sw);
+            DesenharPontuacao(pontuacao, numeros, largura_tela);
 
-            int fs = sh / 12;
-            DrawText("GAME OVER", (sw - MeasureText("GAME OVER", fs))/2, sh*0.35f, fs, RED);
+            int fs = altura_tela / 12;
+            DrawText("GAME OVER", (largura_tela - MeasureText("GAME OVER", fs))/2, altura_tela*0.35f, fs, RED);
 
-            int fs2 = sh / 25;
+            int fs2 = altura_tela / 25;
             DrawText("Press ENTER to return",
-                     (sw - MeasureText("Press ENTER to return", fs2)) / 2,
-                     sh * 0.55f, fs2, BLACK);
+                     (largura_tela - MeasureText("Press ENTER to return", fs2)) / 2,
+                     altura_tela * 0.55f, fs2, BLACK);
 
             EndDrawing();
             continue;
         }
 
-        tempoParaNovoCano -= delta;
-        if (tempoParaNovoCano <= 0) {
-            Pipe *novo = criarCano(sw, sh);
-            if (novo) { novo->next = canos; canos = novo; }
-            tempoParaNovoCano = 2.0f;
+        tempoNovoCano -= delta;
+        if (tempoNovoCano <= 0) {
+            Cano *novo = criarCano(largura_tela, altura_tela);
+            if (novo) { novo->next = listaCanos; listaCanos = novo; }
+            tempoNovoCano = 2.0f;
         }
 
         if (!jogoComecou) {
             if (IsKeyPressed(KEY_SPACE)) {
                 jogoComecou = true;
-                bird.velocity = JUMP_FORCE;
+                passaro.velocidade = FORCA_PULO;
             }
         } else {
-            bird.velocity += GRAVITY * delta;
-            bird.y += bird.velocity * delta;
+            passaro.velocidade += GRAVIDADE * delta;
+            passaro.posicao_passaro_y += passaro.velocidade * delta;
 
             if (IsKeyPressed(KEY_SPACE)) {
-                bird.velocity = JUMP_FORCE;
+                passaro.velocidade = FORCA_PULO;
             }
 
-            atualizarCanos(&canos, delta, &velocidadeCanos);
+            atualizarCanos(&listaCanos, delta, &velocidadeCanos);
         }
 
-        Rectangle birdRec = { bird.x - bird.size, bird.y - bird.size, bird.size*2, bird.size*2 };
+        Rectangle retanguloPassaro = { 
+            passaro.posicao_passaro_x - passaro.tamanho,
+            passaro.posicao_passaro_y - passaro.tamanho,
+            passaro.tamanho*2,
+            passaro.tamanho*2 
+        };
 
-        if (bird.y + bird.size > sh * (1.0f - GROUND_HEIGHT)) {
-            gameOver = true;
+        if (passaro.posicao_passaro_y + passaro.tamanho > altura_tela * (1.0f - ALTURA_CHÃO)) {
+            jogoTerminou = true;
         }
 
-        for (Pipe *p = canos; p != NULL; p = p->next) {
+        for (Cano *c = listaCanos; c != NULL; c = c->next) {
 
-            Rectangle topPipe = { p->x, 0, 80, p->topHeight };
-            Rectangle bottomPipe = { p->x, sh - p->bottomHeight, 80, p->bottomHeight };
+            Rectangle canoSuperior = { c->posicao_cano_x, 0, 80, c->altura_cano_superior };
+            Rectangle canoInferior = { c->posicao_cano_x, altura_tela - c->altura_cano_inferior, 80, c->altura_cano_inferior };
 
-            if (CheckCollisionRecs(birdRec, topPipe) || CheckCollisionRecs(birdRec, bottomPipe)) {
-                gameOver = true;
+            if (CheckCollisionRecs(retanguloPassaro, canoSuperior) ||
+                CheckCollisionRecs(retanguloPassaro, canoInferior)) {
+                jogoTerminou = true;
             }
 
-            if (!p->counted && p->x + 80 < bird.x) {
-                p->counted = true;
-                score++;
+            if (!c->contado && c->posicao_cano_x + 80 < passaro.posicao_passaro_x) {
+                c->contado = true;
+                pontuacao++;
 
                 velocidadeCanos += 100.0f;
 
-                printf("Score = %d | Velocidade = %.2f\n", score, velocidadeCanos);
+                printf("Pontuação = %d | Velocidade = %.2f\n", pontuacao, velocidadeCanos);
             }
         }
 
         BeginDrawing();
         ClearBackground((Color){138, 235, 244, 255});
 
-        DrawRectangle(0, sh * (1.0f - GROUND_HEIGHT), sw, sh * GROUND_HEIGHT,
+        DrawRectangle(0, altura_tela * (1.0f - ALTURA_CHÃO), largura_tela, altura_tela * ALTURA_CHÃO,
                       (Color){117,201,109,255});
 
-        desenharCanos(canos, sh, canoTexture);
+        desenharCanos(listaCanos, altura_tela, texturaCano);
 
         DrawTexturePro(
-            birdTexture,
-            (Rectangle){0,0,birdTexture.width,birdTexture.height},
-            (Rectangle){bird.x-bird.size,bird.y-bird.size,bird.size*2,bird.size*2},
+            texturaPassaro,
+            (Rectangle){0,0,texturaPassaro.width,texturaPassaro.height},
+            (Rectangle){passaro.posicao_passaro_x-passaro.tamanho, passaro.posicao_passaro_y-passaro.tamanho,
+                        passaro.tamanho*2, passaro.tamanho*2},
             (Vector2){0,0},
             0.0f,
             WHITE
         );
 
-        DrawScore(score, numeros, sw);
+        DesenharPontuacao(pontuacao, numeros, largura_tela);
 
         if (!jogoComecou) {
             const char *msg = "Press SPACE to start";
-            int s = sh / 20;
-            DrawText(msg, (sw - MeasureText(msg, s))/2, sh * 0.75f, s, DARKGREEN);
+            int s = altura_tela / 20;
+            DrawText(msg, (largura_tela - MeasureText(msg, s))/2, altura_tela * 0.75f, s, DARKGREEN);
         }
 
         EndDrawing();
