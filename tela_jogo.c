@@ -5,6 +5,8 @@
 #include <stdbool.h>
 
 #define ARQUIVO_RECORD "highscore.txt"
+#define LINHAS_CEU 5 
+#define COLUNAS_CEU 10
 
 int carregarRecorde() {
     FILE *arquivo = fopen(ARQUIVO_RECORD, "r");
@@ -111,6 +113,41 @@ void desenharCanos(Cano *lista, int altura_tela, Texture2D texturaCano) {
     }
 }
 
+int nuvens[LINHAS_CEU][COLUNAS_CEU];
+
+void InicializarCenario() {
+    for (int i = 0; i < LINHAS_CEU; i++) {
+        for (int j = 0; j < COLUNAS_CEU; j++) {
+            if (GetRandomValue(0, 10) >= 8) {
+                nuvens[i][j] = 1;
+            } else {
+                nuvens[i][j] = 0;
+            }
+        }
+    }
+}
+
+void DesenharNuvens(int largura_tela, int altura_tela) {
+    int largura_celula = largura_tela / COLUNAS_CEU;
+    int altura_celula = (altura_tela * 0.5f) / LINHAS_CEU; 
+
+    for (int i = 0; i < LINHAS_CEU; i++) {
+        for (int j = 0; j < COLUNAS_CEU; j++) {
+
+            if (nuvens[i][j] == 1) {
+                int x = j * largura_celula + (largura_celula / 2);
+                int y = i * altura_celula + (altura_celula / 2);
+            
+                Color corNuvem = (Color){255, 255, 255, 200}; 
+                
+                DrawCircle(x, y, 30, corNuvem);       
+                DrawCircle(x - 25, y + 10, 20, corNuvem); 
+                DrawCircle(x + 25, y + 10, 20, corNuvem); 
+            }
+        }
+    }
+}
+
 TelaAtual tela_jogo() {
 
     int largura_tela = GetScreenWidth();
@@ -136,6 +173,8 @@ TelaAtual tela_jogo() {
     passaro.tamanho = altura_tela * 0.03f;
     passaro.velocidade = 0;
 
+    InicializarCenario();
+
     int pontuacao = 0;
     int highscore = carregarRecorde();
     bool jogoComecou = false;
@@ -152,8 +191,9 @@ TelaAtual tela_jogo() {
             BeginDrawing();
             ClearBackground((Color){138, 235, 244, 255});
 
-            DrawRectangle(0, altura_tela * (1.0f - ALTURA_CHÃO), largura_tela, altura_tela * ALTURA_CHÃO,
-                          (Color){117,201,109,255});
+            DesenharNuvens(largura_tela, altura_tela);
+
+            DrawRectangle(0, altura_tela * (1.0f - ALTURA_CHÃO), largura_tela, altura_tela * ALTURA_CHÃO, (Color){117, 201, 109, 255});
 
             desenharCanos(listaCanos, altura_tela, texturaCano);
 
@@ -255,8 +295,9 @@ TelaAtual tela_jogo() {
         BeginDrawing();
         ClearBackground((Color){138, 235, 244, 255});
 
-        DrawRectangle(0, altura_tela * (1.0f - ALTURA_CHÃO), largura_tela, altura_tela * ALTURA_CHÃO,
-                      (Color){117,201,109,255});
+        DesenharNuvens(largura_tela, altura_tela);
+
+        DrawRectangle(0, altura_tela * (1.0f - ALTURA_CHÃO), largura_tela, altura_tela * ALTURA_CHÃO, (Color){117, 201, 109, 255});
 
         desenharCanos(listaCanos, altura_tela, texturaCano);
 
